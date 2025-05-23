@@ -14,6 +14,4 @@ pytesseract==0.3.13
 Requests==2.32.3
 scikit_learn==1.6.1
 spacy==3.8.7
-tensorflow==2.13.0
-tensorflow_intel==2.13.0
-transformers==4.51.3
+tensorflow==2.13.0  # Changed from tensorflow_intel

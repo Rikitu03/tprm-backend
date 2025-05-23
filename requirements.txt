@@ -9,9 +9,9 @@ numpy==1.24.3
 opencv_python==4.11.0.86
 pdf2image==1.17.0
 Pillow==11.2.1
-protobuf==6.31.0
+protobuf==3.20.3  
 pytesseract==0.3.13
 Requests==2.32.3
 scikit_learn==1.6.1
 spacy==3.8.7
-tensorflow==2.13.0  # Changed from tensorflow_intel
+tensorflow==2.13.0

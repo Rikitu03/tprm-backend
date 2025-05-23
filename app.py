@@ -194,7 +194,7 @@ def verify():
         )
     else:
         overall_score = 0
-        risk_level = "High (No valid documents)"
+        risk_level = "Invalid (No valid documents)"
 
     return jsonify({
         "company_name": company_name,

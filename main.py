@@ -8,18 +8,7 @@ import requests
 import tempfile
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "https://maroon-gerbil-893812.hostingersite.com",
-            "http://localhost:3000" 
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
-
-
+CORS(app)
 
 
 model = None

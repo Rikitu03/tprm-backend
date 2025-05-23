@@ -8,7 +8,17 @@ import requests
 import tempfile
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://your-frontend-domain.com"]}})
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://maroon-gerbil-893812.hostingersite.com",
+            "http://localhost:3000" 
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+
 
 
 
@@ -28,7 +38,7 @@ def safe_api(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
-            print(f"API Error: {str(e)}")
+            app.logger.error(f"API Error: {str(e)}")
             return jsonify({"error": "Internal server error", "details": str(e)}), 500
     return wrapper
 
@@ -144,7 +154,7 @@ def verify():
             
         try:
             response = requests.get(file_url)
-            response.raise_for_status()  # Raises exception for 4XX/5XX status codes
+            response.raise_for_status()  
             
             with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file_url)[1]) as tmp_file:
                 tmp_file.write(response.content)

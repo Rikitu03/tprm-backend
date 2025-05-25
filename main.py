@@ -31,54 +31,64 @@ def safe_api(f):
             return jsonify({"error": "Internal server error", "details": str(e)}), 500
     return wrapper
 
+@app.route("/")
+@safe_api
+def index():
+    return "backend!"
 
 @app.route('/assess_compliance_risk', methods=['POST'])
 @safe_api
 def assess_compliance_risk():
-    print("Received POST request to /assess_compliance_risk")
-    print("Request data:", request.json)
-    start_time = time.time()
+    app.logger.info("Received POST request to /assess_compliance_risk")
+    data = request.get_json()
+    app.logger.debug(f"Request data: {data}")
     
-    if not request.json or 'companyName' not in request.json:
+    if not data or 'companyName' not in data:
         return jsonify({"error": "companyName is required"}), 400
 
-    data = request.get_json()
     company_name = data.get('companyName')
     file_paths = data.get('documents', {})
-    
+
     if not file_paths:
         return jsonify({"error": "No files found for the given companyName"}), 404
 
-    file_types_to_process = ['BIR_permit', 'GIS', 'financial_statements']
-    results = {
-        doc_type: {"error": "Document not provided", "status": "missing"} 
-        for doc_type in file_types_to_process
-    }
+    file_types_to_process = ['GIS', 'BIR_permit', 'financial_statements']
+    results = {doc_type: {"error": "Document not provided", "status": "missing"} for doc_type in file_types_to_process}
 
     for file_type in file_types_to_process:
-        file_path = file_paths.get(file_type)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        raw_path = os.path.join(script_dir,'..', 'FRONT_END')
-        full_path = os.path.normpath(os.path.join(raw_path, file_path))
-        print(full_path)
-
-        if not full_path or not isinstance(full_path, str):
+        file_url = file_paths.get(file_type)
+        if not file_url or not isinstance(file_url, str):
             continue
             
-        if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.pdf')):
-            if os.path.exists(full_path):
-                try:
-                    results[file_type] = predict_document(full_path, file_type, get_model(), company_name)
-                except Exception as e:
-                    results[file_type] = {
-                        "error": str(e),
-                        "status": "processing_error"
-                    }
-            else:
+        try:
+            response = requests.get(file_url)
+            response.raise_for_status()  
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file_url)[1]) as tmp_file:
+                tmp_file.write(response.content)
+                tmp_file_path = tmp_file.name
+            
+            try:
+                results[file_type] = predict_document(tmp_file_path, file_type, get_model(), company_name)
+            except Exception as e:
                 results[file_type] = {
-                    "error": f"File not found at {full_path}",
-                    "status": "file_not_found"
+                    "error": str(e),
+                    "status": "processing_error"
                 }
+            finally:
+                if os.path.exists(tmp_file_path):
+                    os.unlink(tmp_file_path)
+                    
+        except requests.exceptions.RequestException as e:
+            results[file_type] = {
+                "error": f"Failed to download file from {file_url}: {str(e)}",
+                "status": "download_error"
+            }
+        except Exception as e:
+            results[file_type] = {
+                "error": str(e),
+                "status": "processing_error"
+            }
 
     def extract_score(result):
         if not isinstance(result, dict):

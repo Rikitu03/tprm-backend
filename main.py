@@ -214,7 +214,6 @@ def verify():
     }), 200
 
 if __name__ == "__main__":
-    context = ('/etc/ssl/certs/selfsigned.crt', '/etc/ssl/private/selfsigned.key')
-    app.run(host='0.0.0.0', port=443, ssl_context=context)
+    app.run(ssl_context=('server.crt', 'server.key'))
 else:
     application = app

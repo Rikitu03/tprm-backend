@@ -213,7 +213,7 @@ def verify():
         "processing_time_seconds": round(time.time() - start_time, 2)
     }), 200
 
-if __name__ == "__main__":
-    app.run(ssl_context=('server.crt', 'server.key'))
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, ssl_context=('server.crt', 'server.key'))
 else:
     application = app
